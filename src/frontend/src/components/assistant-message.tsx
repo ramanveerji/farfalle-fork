@@ -1,4 +1,3 @@
-import { AssistantMessage } from "@/types";
 import { MessageComponent, MessageComponentSkeleton } from "./message";
 import RelatedQuestions from "./related-questions";
 import { SearchResultsSkeleton, SearchResults } from "./search-results";
@@ -6,6 +5,8 @@ import { Section } from "./section";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ImageSection, ImageSectionSkeleton } from "./image-section";
+import { ChatMessage } from "../../generated";
+import { CopyToClipboardBtn } from "./copy-to-clipboard-btn";
 
 export function ErrorMessage({ content }: { content: string }) {
   return (
@@ -39,19 +40,19 @@ export const AssistantMessageContent = ({
   isStreaming = false,
   onRelatedQuestionSelect,
 }: {
-  message: AssistantMessage;
+  message: ChatMessage;
   isStreaming?: boolean;
   onRelatedQuestionSelect: (question: string) => void;
 }) => {
   const {
     sources,
     content,
-    relatedQuestions,
+    related_queries,
     images,
-    isErrorMessage = false,
+    is_error_message = false,
   } = message;
 
-  if (isErrorMessage) {
+  if (is_error_message) {
     return <ErrorMessage content={message.content} />;
   }
 
@@ -59,7 +60,12 @@ export const AssistantMessageContent = ({
     <div className="flex flex-col">
       <Section title="Answer" animate={isStreaming} streaming={isStreaming}>
         {content ? (
-          <MessageComponent message={message} isStreaming={isStreaming} />
+          <>
+            <MessageComponent message={message} isStreaming={isStreaming} />
+            <div className="flex flex-row-reverse">
+              <CopyToClipboardBtn content={content} />
+            </div>
+          </>
         ) : (
           <MessageComponentSkeleton />
         )}
@@ -80,10 +86,10 @@ export const AssistantMessageContent = ({
           <ImageSectionSkeleton />
         )}
       </Section>
-      {relatedQuestions && relatedQuestions.length > 0 && (
+      {related_queries && related_queries.length > 0 && (
         <Section title="Related" animate={isStreaming}>
           <RelatedQuestions
-            questions={relatedQuestions}
+            questions={related_queries}
             onSelect={onRelatedQuestionSelect}
           />
         </Section>

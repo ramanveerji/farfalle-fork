@@ -2,14 +2,13 @@
 "use client";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { SearchResult } from "@/types";
 import { Skeleton } from "./ui/skeleton";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { SearchResult } from "../../generated";
 
 export const SearchResultsSkeleton = () => {
   return (
@@ -25,7 +24,7 @@ export const SearchResultsSkeleton = () => {
   );
 };
 
-const Logo = ({ url }: { url: string }) => {
+export const Logo = ({ url }: { url: string }) => {
   return (
     <div className="rounded-full overflow-hidden relative">
       <img

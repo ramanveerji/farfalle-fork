@@ -2,8 +2,10 @@ import asyncio
 from typing import AsyncIterator, List
 
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
 from backend.constants import get_model_string
+from backend.db.chat import save_turn_to_db
 from backend.llm.base import BaseLLM, EveryLLM
 from backend.prompts import CHAT_PROMPT, HISTORY_QUERY_REPHRASE
 from backend.related_queries import generate_related_queries
@@ -49,9 +51,12 @@ def format_context(search_results: List[SearchResult]) -> str:
     )
 
 
-async def stream_qa_objects(request: ChatRequest) -> AsyncIterator[ChatResponseEvent]:
+async def stream_qa_objects(
+    request: ChatRequest, session: Session
+) -> AsyncIterator[ChatResponseEvent]:
     try:
-        llm = EveryLLM(model=get_model_string(request.model))
+        model_name = get_model_string(request.model)
+        llm = EveryLLM(model=model_name)
 
         yield ChatResponseEvent(
             event=StreamEvent.BEGIN_STREAM,
@@ -105,15 +110,27 @@ async def stream_qa_objects(request: ChatRequest) -> AsyncIterator[ChatResponseE
             data=RelatedQueriesStream(related_queries=related_queries),
         )
 
-        yield ChatResponseEvent(
-            event=StreamEvent.STREAM_END,
-            data=StreamEndStream(),
+        thread_id = save_turn_to_db(
+            session=session,
+            thread_id=request.thread_id,
+            user_message=request.query,
+            assistant_message=full_response,
+            model=request.model,
+            search_results=search_results,
+            image_results=images,
+            related_queries=related_queries,
         )
 
         yield ChatResponseEvent(
             event=StreamEvent.FINAL_RESPONSE,
             data=FinalResponseStream(message=full_response),
         )
+
+        yield ChatResponseEvent(
+            event=StreamEvent.STREAM_END,
+            data=StreamEndStream(thread_id=thread_id),
+        )
+
     except Exception as e:
         detail = str(e)
         raise HTTPException(status_code=500, detail=detail)

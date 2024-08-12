@@ -60,7 +60,7 @@ def get_bing_api_key():
 
 
 def get_search_provider() -> SearchProvider:
-    search_provider = os.getenv("SEARCH_PROVIDER", "tavily")
+    search_provider = os.getenv("SEARCH_PROVIDER", "searxng")
 
     match search_provider:
         case "searxng":
