@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, declarative_base
 
 load_dotenv()
 
@@ -17,14 +17,19 @@ DATABASE_URL = (
     or f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 )
 
-
 def create_connection_string():
     return DATABASE_URL
 
-
 engine = create_engine(create_connection_string())
 
+Base = declarative_base()
+
+def create_tables():
+    Base.metadata.create_all(engine)
 
 def get_session():
     with Session(engine) as session:
         yield session
+
+# Call the function to create the tables
+create_tables()
